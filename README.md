@@ -4,7 +4,7 @@ Minimal neural network inference engine written in pure C with CUDA acceleration
 ### Project structure
 ```
 include/
-└── model_defs.cuh       ← structures definitions + prototypes
+└── model_definitions.cuh       ← structures definitions + prototypes
 src/
 ├── main.c               ← arg parsing, init, infer → teardown
 ├── loader.c             ← load_bin, load_cfg, allocs host/device
