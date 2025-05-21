@@ -1,1 +1,0 @@
-void kernel(double*, double*, double*, int);
