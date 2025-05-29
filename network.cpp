@@ -1,4 +1,7 @@
 #include "network.h"
+#include "layer.h"
+#include "loader.h"
+
 
 Network::Network() {
 	layers = nullptr;
@@ -15,6 +18,10 @@ Network::~Network() {
 		layers = nullptr;
 	}
 	n_layers = 0;
+}
+
+Network& Network::from_file(const std::string config_file, const std::string binary_file) {
+	return Loader::load_model(config_file, binary_file);
 }
 
 size_t Network::num_layers() const {

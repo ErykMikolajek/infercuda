@@ -2,6 +2,8 @@
 #include <fstream>
 #include <nlohmann/json.hpp>
 #include "loader.h"
+#include "layer.h"
+#include "network.h"
 
 using json = nlohmann::json;
 
@@ -9,11 +11,17 @@ Layer* Loader::load_cfg(const char* cfg) {
     std::ifstream file(cfg);
     if (!file.is_open()) {
         std::cerr << "Cannot open the file: " << cfg << std::endl;
-        return;
+        return nullptr;
     }
-
     json j;
-    file >> j;
+    try
+    {
+        j = json::parse(file);
+    }
+    catch (json::parse_error& ex)
+    {
+        std::cerr << "Config file parse error at byte " << ex.byte << std::endl;
+    }
 
     auto layers_json = j["model"]["architecture"]["layers"];
     int n_layers = layers_json.size();
@@ -35,7 +43,7 @@ Layer* Loader::load_cfg(const char* cfg) {
 	return layers;
 }
 
-void Loader::load_weights(const char* bin, Layer* layers, int n_layers) {
+void Loader::load_weights(const char* bin, Layer* layers, size_t n_layers) {
     FILE* file = fopen(bin, "rb");
     if (!file) {
         std::cerr << "Error opening file: " << bin << std::endl;
@@ -77,7 +85,7 @@ void Loader::allocate_on_device(Network &n) {
 	}
 }
 
-Network Loader::load_model(const std::string cfg, const std::string bin) {
+Network& Loader::load_model(const std::string cfg, const std::string bin) {
 	Layer* new_layers = load_cfg(cfg.c_str());
 	size_t n_layers = sizeof(new_layers) / sizeof(new_layers[0]);
 	load_weights(bin.c_str(), new_layers, n_layers);

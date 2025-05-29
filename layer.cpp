@@ -7,7 +7,11 @@ Layer::Layer(size_t in_dim, size_t out_dim, Activation act_func) : input_dim(in_
 Layer::Layer() {}
 
 Layer::~Layer() {
-	
+    delete[] w;
+    delete[] b;
+
+    cudaFree(d_w);
+    cudaFree(d_b);
 }
 
 void Layer::init_weights(real_t* w_init, real_t* b_init) {

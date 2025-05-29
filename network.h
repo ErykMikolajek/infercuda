@@ -1,11 +1,10 @@
 #ifndef NETWORK_H
 #define NETWORK_H
 
-#include "common.h"
-#include "layer.h"
 #include <vector>
 #include <string>
-//#include "loader.h"
+
+class Layer;
 
 class Network
 {
@@ -17,7 +16,7 @@ class Network
 		Network();
 		Network(Layer* layers);
 		~Network();
-        static Network from_file(const std::string& filepath);
+        static Network& from_file(const std::string config_file, const std::string binary_file);
 		size_t num_layers() const;
 		Layer& get_layer(size_t layer_index) const;
 

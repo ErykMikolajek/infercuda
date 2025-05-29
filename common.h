@@ -7,4 +7,4 @@
 using real_t = float;
 constexpr int BLOCK_SIZE = 256;
 
-#endif
+#endif // COMMON_H

@@ -82,7 +82,6 @@
     <ClInclude Include="layer.h" />
     <ClInclude Include="loader.h" />
     <ClInclude Include="network.h" />
-    <ClInclude Include="model_definitions.h" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="activations.cu" />
