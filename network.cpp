@@ -77,3 +77,12 @@ void Network::print_network_stats() const {
 		layers[i].print_layer_stats();
 	}
 }
+
+real_t* Network::forward(real_t* input) const {
+    real_t* output = input;
+    for (size_t i = 0; i < n_layers; ++i) {
+        layers[i].forward(input, output);
+        input = output;
+	}
+	return output;
+}

@@ -1,4 +1,5 @@
 #include "layer.h"
+#include "kernels.h"
 #include <stdexcept>
 
 Layer::Layer() : input_dim(0), output_dim(0), act(None),
@@ -132,4 +133,18 @@ void Layer::print_layer_stats() const {
         std::printf("%f ", b[i]);
 	}
 	std::printf("\n");
+}
+
+void Layer:: forward(const real_t* input, real_t* output) const {
+    if (input == nullptr || output == nullptr) {
+        throw std::runtime_error("Input or output pointer is null.");
+    }
+    if (w == nullptr || b == nullptr) {
+        throw std::runtime_error("Weights or biases not initialized.");
+    }
+    
+	fc_forward(input, d_w, d_b, output, 1, input_dim, output_dim);
+    /*if (act != None) {
+        activation_forward(output, output, output_dim, act);
+	}*/
 }

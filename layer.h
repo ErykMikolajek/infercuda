@@ -2,6 +2,7 @@
 #define LAYER_H
 
 #include "common.h"
+//#include "kernels.h"
 
 enum Activation{
 	None = -1,
@@ -29,7 +30,9 @@ public:
 	size_t get_output_dim() const;
 	void alloc_device();
 
+	void forward(const real_t* input, real_t* output) const;
+
 	void print_layer_stats() const;
 };
 
-#endif
+#endif // LAYER_H

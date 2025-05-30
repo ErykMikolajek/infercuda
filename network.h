@@ -22,6 +22,8 @@ class Network
 		size_t num_layers() const;
 		Layer& get_layer(size_t layer_index) const;
 
+		real_t* forward(real_t* input) const;
+
 		void print_network_stats() const;
 
 };
