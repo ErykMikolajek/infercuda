@@ -79,15 +79,18 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="common.h" />
+    <ClInclude Include="dataset_loader.h" />
+    <ClInclude Include="kernels.h" />
     <ClInclude Include="layer.h" />
     <ClInclude Include="loader.h" />
     <ClInclude Include="network.h" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="activations.cu" />
-    <CudaCompile Include="fc_layer.cu" />
+    <CudaCompile Include="fc_kernel.cu" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="dataset_loader.cpp" />
     <ClCompile Include="infer.cpp" />
     <ClCompile Include="layer.cpp" />
     <ClCompile Include="loader.cpp" />

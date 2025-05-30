@@ -20,12 +20,16 @@ private:
 public:
 	Layer();
 	Layer(size_t in_dim, size_t out_dim, Activation act_func);
+	Layer(const Layer& other);
+	Layer& operator=(const Layer& other);
     ~Layer();
 
 	void init_weights(real_t* w_init, real_t* b_init);
 	size_t get_input_dim() const;
 	size_t get_output_dim() const;
 	void alloc_device();
+
+	void print_layer_stats() const;
 };
 
 #endif

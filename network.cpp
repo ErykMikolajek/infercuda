@@ -8,8 +8,46 @@ Network::Network() {
 	n_layers = 0;
 }
 
-Network::Network(Layer* layers): layers(layers) {
-	n_layers = sizeof(layers) / sizeof(Layer);
+Network::Network(Layer* external_layers, size_t num_layers): n_layers(num_layers) {
+    layers = new Layer[n_layers];
+    for (size_t i = 0; i < n_layers; ++i) {
+        layers[i] = external_layers[i];
+    }
+}
+
+Network::Network(const Network& other) : n_layers(other.n_layers) {
+    if (n_layers > 0) {
+        layers = new Layer[n_layers];
+        for (size_t i = 0; i < n_layers; ++i) {
+            layers[i] = other.layers[i];
+        }
+    } else {
+        layers = nullptr;
+    }
+}
+
+Network& Network::operator=(const Network& other) {
+    if (this == &other) {
+        return *this;
+    }
+
+    if (layers != nullptr) {
+        delete[] layers;
+        layers = nullptr;
+    }
+
+    n_layers = other.n_layers;
+
+    if (n_layers > 0) {
+        layers = new Layer[n_layers];
+        for (size_t i = 0; i < n_layers; ++i) {
+            layers[i] = other.layers[i];
+        }
+    } else {
+        layers = nullptr;
+    }
+
+    return *this;
 }
 
 Network::~Network() {
@@ -30,4 +68,12 @@ size_t Network::num_layers() const {
 
 Layer& Network::get_layer(size_t layer_index) const {
 	return layers[layer_index];
+}
+
+void Network::print_network_stats() const {
+	std::printf("---- Network stats: ----");
+	for (size_t i = 0; i < n_layers; ++i) {
+		std::printf("\n------- Layer %zu: -------\n", i);
+		layers[i].print_layer_stats();
+	}
 }

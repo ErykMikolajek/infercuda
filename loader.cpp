@@ -7,11 +7,11 @@
 
 using json = nlohmann::json;
 
-Layer* Loader::load_cfg(const char* cfg) {
+std::pair<Layer*, size_t> Loader::load_cfg(const char* cfg) {
     std::ifstream file(cfg);
     if (!file.is_open()) {
         std::cerr << "Cannot open the file: " << cfg << std::endl;
-        return nullptr;
+        return std::make_pair(nullptr, 0);
     }
     json j;
     try
@@ -37,10 +37,10 @@ Layer* Loader::load_cfg(const char* cfg) {
         else if (act_string == "softmax") act = Activation::Softmax;
 		else act = Activation::None;
 
-        new (&layers[i]) Layer(l["in_features"], l["out_features"], act);       
+        layers[i] = Layer(l["in_features"], l["out_features"], act);
     }
 
-	return layers;
+	return std::make_pair(layers, n_layers);
 }
 
 void Loader::load_weights(const char* bin, Layer* layers, size_t n_layers) {
@@ -55,7 +55,7 @@ void Loader::load_weights(const char* bin, Layer* layers, size_t n_layers) {
         int out = layers[i].get_output_dim();
      
         real_t* weights = new real_t[in * out];
-        size_t read_w = fread(weights, sizeof(float), in * out, file);
+        size_t read_w = fread(weights, sizeof(real_t), in * out, file);
         if (read_w != (size_t)(in * out)) {
             std::cerr << "Error reading weighs of layer: " << i << std::endl;
             fclose(file);
@@ -63,7 +63,7 @@ void Loader::load_weights(const char* bin, Layer* layers, size_t n_layers) {
         }
 
         real_t* biases = new real_t[out];
-        size_t read_b = fread(biases, sizeof(float), out, file);
+        size_t read_b = fread(biases, sizeof(real_t), out, file);
         if (read_b != (size_t)out) {
             std::cerr << "Error reading biases of layer: " << i << std::endl;
             fclose(file);
@@ -86,12 +86,16 @@ void Loader::allocate_on_device(Network &n) {
 }
 
 Network& Loader::load_model(const std::string cfg, const std::string bin) {
-	Layer* new_layers = load_cfg(cfg.c_str());
-	size_t n_layers = sizeof(new_layers) / sizeof(new_layers[0]);
-	load_weights(bin.c_str(), new_layers, n_layers);
+    Layer* new_layers;
+    size_t num_layers;
+    std::tie(new_layers, num_layers) = load_cfg(cfg.c_str());
 
-	Network net = Network(new_layers);
-    allocate_on_device(net);
+	load_weights(bin.c_str(), new_layers, num_layers);
 
-    return net;
+	Network* net = new Network(new_layers, num_layers);
+    allocate_on_device(*net);
+
+	delete[] new_layers;
+
+    return *net;
 }

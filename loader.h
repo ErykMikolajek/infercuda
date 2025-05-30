@@ -12,7 +12,7 @@ public:
 
 private:
     static void load_weights(const char* bin, Layer* layers, size_t n_layers);
-    static Layer* load_cfg(const char* cfg);
+    static std::pair<Layer*, size_t> load_cfg(const char* cfg);
     static void allocate_on_device(Network &m);
 };
 
