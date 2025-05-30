@@ -1,6 +1,8 @@
 #ifndef NETWORK_H
 #define NETWORK_H
 
+#include "common.h"
+#include <cstdio>
 #include <vector>
 #include <string>
 

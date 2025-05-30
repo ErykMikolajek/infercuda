@@ -136,8 +136,8 @@ void Layer::print_layer_stats() const {
 }
 
 void Layer:: forward(const real_t* input, real_t* output) const {
-    if (input == nullptr || output == nullptr) {
-        throw std::runtime_error("Input or output pointer is null.");
+    if (input == nullptr) {
+        throw std::runtime_error("Input pointer is null.");
     }
     if (w == nullptr || b == nullptr) {
         throw std::runtime_error("Weights or biases not initialized.");
