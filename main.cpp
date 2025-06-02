@@ -34,7 +34,6 @@ int main() {
 
 	//printf("Output: %f\n", output[0]);
 
-	cudaFree(data_device);
 	delete[] data;
 	delete[] target;
 	delete[] output;
