@@ -142,6 +142,9 @@ void Layer::forward(const real_t* input, real_t* output) const {
     if (w == nullptr || b == nullptr) {
         throw std::runtime_error("Weights or biases not initialized.");
     }
+    if (d_w == nullptr || d_b == nullptr) {
+        throw std::runtime_error("Device weights or biases not allocated.");
+    }
     
 	printf("Forward pass through layer with input dimension %zu and output dimension %zu\n", input_dim, output_dim);
 	fc_forward(input, d_w, d_b, output, 1, input_dim, output_dim);
