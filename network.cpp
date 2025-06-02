@@ -1,6 +1,7 @@
 #include "network.h"
 #include "layer.h"
 #include "loader.h"
+#include <stdexcept>
 
 
 Network::Network() {
@@ -79,10 +80,48 @@ void Network::print_network_stats() const {
 }
 
 real_t* Network::forward(real_t* input) const {
-    real_t* output = input;
+    if (n_layers == 0) {
+        return input;
+    }
+
+    size_t final_output_size = layers[n_layers - 1].get_output_dim();
+    real_t* final_output = nullptr;
+    cudaError_t err = cudaMalloc(&final_output, final_output_size * sizeof(real_t));
+
+    if (err != cudaSuccess) {
+        throw std::runtime_error("Failed to allocate final output buffer: " +
+            std::string(cudaGetErrorString(err)));
+    }
+
+    real_t* current_input = input;
+    real_t* current_output = nullptr;
+
     for (size_t i = 0; i < n_layers; ++i) {
-        layers[i].forward(input, output);
-        input = output;
-	}
-	return output;
+        size_t output_size = layers[i].get_output_dim();
+
+        if (i == n_layers - 1) {
+            current_output = final_output;
+        }
+        else {
+            err = cudaMalloc(&current_output, output_size * sizeof(real_t));
+            if (err != cudaSuccess) {
+                if (i > 0)
+                    cudaFree(current_input);
+                cudaFree(final_output);
+                throw std::runtime_error(
+                    "Failed to allocate intermediate output buffer: " +
+                    std::string(cudaGetErrorString(err)));
+            }
+        }
+
+        layers[i].forward(current_input, current_output);
+
+        if (i > 0 && current_input != input) {
+            cudaFree(current_input);
+        }
+
+        current_input = current_output;
+    }
+
+    return final_output;
 }

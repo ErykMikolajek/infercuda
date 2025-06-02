@@ -92,7 +92,7 @@ void DatasetLoader::allocate_on_device(real_t* data, real_t** allocated_data, si
             std::string(cudaGetErrorString(err)));
     }
     if (allocated_data != nullptr)
-        printf("Allocated data");
+        printf("Data allocated successfully\n");
 }
 
 real_t* DatasetLoader::deallocate_from_device(real_t** allocated_data, size_t data_size) {

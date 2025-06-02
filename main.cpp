@@ -1,6 +1,7 @@
 #include <iostream>
 #include <tuple>
 #include "network.h"
+#include "layer.h"
 #include "dataset_loader.h"
 
 int main() {
@@ -11,11 +12,11 @@ int main() {
 
 	DatasetLoader dataset_loader(dataset_file, 10000, 784, 1, true);
 
-	real_t* data;
-	real_t* target;
+	real_t *data;
+	real_t *target;
 	std::tie(data, target) = dataset_loader.get_next_sample();
 
-	real_t* data_device = nullptr;
+	real_t *data_device = nullptr;
 	DatasetLoader::allocate_on_device(data, &data_device, 28*28);
 
 	printf("Data: %f\n", data[0]);
@@ -26,15 +27,17 @@ int main() {
 	//std::printf("Num layers: %zu", model_mnist.num_layers());
 	//model_mnist.print_network_stats();
 
-	real_t* output_device = model_mnist.forward(data_device);
+	real_t *output_device = model_mnist.forward(data_device);
 
-	real_t* output = DatasetLoader::deallocate_from_device(&output_device, 28*28);
+	size_t output_size = model_mnist.get_layer(model_mnist.num_layers() - 1).get_output_dim();
+	real_t *output = DatasetLoader::deallocate_from_device(&output_device, output_size);
 
 	//printf("Output: %f\n", output[0]);
 
 	cudaFree(data_device);
 	delete[] data;
 	delete[] target;
+	delete[] output;
 	
 	return 0;
 }
