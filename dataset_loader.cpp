@@ -96,21 +96,35 @@ void DatasetLoader::allocate_on_device(real_t* data, real_t** allocated_data, si
 }
 
 real_t* DatasetLoader::deallocate_from_device(real_t** allocated_data, size_t data_size) {
-	real_t* data = new real_t[data_size];
     cudaError_t err;
+
     if (allocated_data == nullptr || *allocated_data == nullptr) {
         throw std::runtime_error("Allocated data pointer is null");
-	}
-	err = cudaMemcpy(data, *allocated_data, data_size * sizeof(real_t), cudaMemcpyDeviceToHost);
+    }
+
+    err = cudaDeviceSynchronize();
     if (err != cudaSuccess) {
+        throw std::runtime_error("Failed to synchronize device: " +
+            std::string(cudaGetErrorString(err)));
+    }
+
+    real_t* data = new real_t[data_size];
+
+    err = cudaMemcpy(data, *allocated_data, data_size * sizeof(real_t),
+        cudaMemcpyDeviceToHost);
+    if (err != cudaSuccess) {
+        delete[] data;
         throw std::runtime_error("Failed to copy data from device: " +
             std::string(cudaGetErrorString(err)));
     }
+
     err = cudaFree(*allocated_data);
     if (err != cudaSuccess) {
+        delete[] data;
         throw std::runtime_error("Failed to free device memory: " +
             std::string(cudaGetErrorString(err)));
     }
+
     *allocated_data = nullptr;
-	return data;
+    return data;
 }

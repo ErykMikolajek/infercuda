@@ -123,5 +123,7 @@ real_t* Network::forward(real_t* input) const {
         current_input = current_output;
     }
 
+	cudaDeviceSynchronize();
+
     return final_output;
 }
