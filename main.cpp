@@ -21,9 +21,6 @@ int main() {
 	printf("Data: %f\n", data[0]);
 	printf("Target: %f\n", target[0]);
 
-	if (data_device != nullptr)
-		printf("Allocated data2");
-
 	Network model_mnist = Network::from_file(model_cfg_file, model_weights_file);
 
 	//std::printf("Num layers: %zu", model_mnist.num_layers());
@@ -31,7 +28,7 @@ int main() {
 
 	real_t* output_device = model_mnist.forward(data_device);
 
-	real_t* output = DatasetLoader::deallocate_from_device(&data_device, 10);
+	real_t* output = DatasetLoader::deallocate_from_device(&output_device, 28*28);
 
 	//printf("Output: %f\n", output[0]);
 

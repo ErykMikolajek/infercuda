@@ -87,7 +87,7 @@ void DatasetLoader::allocate_on_device(real_t* data, real_t** allocated_data, si
     }
     err = cudaMemcpy(*allocated_data, data, size * sizeof(real_t), cudaMemcpyHostToDevice);
     if (err != cudaSuccess) {
-        cudaFree(allocated_data);
+        cudaFree(*allocated_data);
         throw std::runtime_error("Failed to copy weights to device: " +
             std::string(cudaGetErrorString(err)));
     }
