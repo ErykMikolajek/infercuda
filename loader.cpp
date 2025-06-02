@@ -95,7 +95,7 @@ Network& Loader::load_model(const std::string cfg, const std::string bin) {
 	Network* net = new Network(new_layers, num_layers);
     allocate_on_device(*net);
 
-	delete[] new_layers;
+	//delete[] new_layers;
 
     return *net;
 }

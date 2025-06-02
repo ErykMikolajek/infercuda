@@ -73,7 +73,7 @@ std::pair<real_t*, real_t*> DatasetLoader::get_next_sample(bool normalize) {
     return std::make_pair(data, target);
 }
 
-void DatasetLoader::allocate_on_device(real_t* data, real_t* allocated_data, size_t size) {
+void DatasetLoader::allocate_on_device(real_t* data, real_t** allocated_data, size_t size) {
     cudaError_t err;
 
     if (data == nullptr) {
@@ -85,10 +85,12 @@ void DatasetLoader::allocate_on_device(real_t* data, real_t* allocated_data, siz
         throw std::runtime_error("Failed to allocate device memory for data: " +
             std::string(cudaGetErrorString(err)));
     }
-    err = cudaMemcpy(allocated_data, data, size* sizeof(real_t), cudaMemcpyHostToDevice);
+    err = cudaMemcpy(allocated_data, data, size * sizeof(real_t), cudaMemcpyHostToDevice);
     if (err != cudaSuccess) {
         cudaFree(allocated_data);
         throw std::runtime_error("Failed to copy weights to device: " +
             std::string(cudaGetErrorString(err)));
     }
+    if (allocated_data != nullptr)
+        printf("Allocated data");
 }

@@ -16,10 +16,13 @@ int main() {
 	std::tie(data, target) = dataset_loader.get_next_sample();
 
 	real_t* data_device = nullptr;
-	DatasetLoader::allocate_on_device(data, data_device, 28*28);
+	DatasetLoader::allocate_on_device(data, &data_device, 28*28);
 
 	printf("Data: %f\n", data[0]);
 	printf("Target: %f\n", target[0]);
+
+	if (data_device != nullptr)
+		printf("Allocated data2");
 
 	Network model_mnist = Network::from_file(model_cfg_file, model_weights_file);
 
