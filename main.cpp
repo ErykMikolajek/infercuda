@@ -29,8 +29,11 @@ int main() {
 	//std::printf("Num layers: %zu", model_mnist.num_layers());
 	//model_mnist.print_network_stats();
 
-	real_t* output = model_mnist.forward(data_device);
-	printf("Output: %f\n", output[0]);
+	real_t* output_device = model_mnist.forward(data_device);
+
+	real_t* output = DatasetLoader::deallocate_from_device(&data_device, 10);
+
+	//printf("Output: %f\n", output[0]);
 
 	cudaFree(data_device);
 	delete[] data;

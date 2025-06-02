@@ -80,12 +80,12 @@ void DatasetLoader::allocate_on_device(real_t* data, real_t** allocated_data, si
         throw std::runtime_error("Source data is empty");
     }
 
-    err = cudaMalloc(&allocated_data, size * sizeof(real_t));
+    err = cudaMalloc(allocated_data, size * sizeof(real_t));
     if (err != cudaSuccess) {
         throw std::runtime_error("Failed to allocate device memory for data: " +
             std::string(cudaGetErrorString(err)));
     }
-    err = cudaMemcpy(allocated_data, data, size * sizeof(real_t), cudaMemcpyHostToDevice);
+    err = cudaMemcpy(*allocated_data, data, size * sizeof(real_t), cudaMemcpyHostToDevice);
     if (err != cudaSuccess) {
         cudaFree(allocated_data);
         throw std::runtime_error("Failed to copy weights to device: " +
@@ -93,4 +93,24 @@ void DatasetLoader::allocate_on_device(real_t* data, real_t** allocated_data, si
     }
     if (allocated_data != nullptr)
         printf("Allocated data");
+}
+
+real_t* DatasetLoader::deallocate_from_device(real_t** allocated_data, size_t data_size) {
+	real_t* data = new real_t[data_size];
+    cudaError_t err;
+    if (allocated_data == nullptr || *allocated_data == nullptr) {
+        throw std::runtime_error("Allocated data pointer is null");
+	}
+	err = cudaMemcpy(data, *allocated_data, data_size * sizeof(real_t), cudaMemcpyDeviceToHost);
+    if (err != cudaSuccess) {
+        throw std::runtime_error("Failed to copy data from device: " +
+            std::string(cudaGetErrorString(err)));
+    }
+    err = cudaFree(*allocated_data);
+    if (err != cudaSuccess) {
+        throw std::runtime_error("Failed to free device memory: " +
+            std::string(cudaGetErrorString(err)));
+    }
+    *allocated_data = nullptr;
+	return data;
 }
