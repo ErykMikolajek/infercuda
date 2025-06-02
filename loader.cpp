@@ -80,7 +80,7 @@ void Loader::load_weights(const char* bin, Layer* layers, size_t n_layers) {
 
 void Loader::allocate_on_device(Network &n) {
     for (int i = 0; i < n.num_layers(); i++) {
-		Layer l = n.get_layer(i);
+		Layer& l = n.get_layer(i);
 		l.alloc_device();
 	}
 }
