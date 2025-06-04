@@ -1,0 +1,23 @@
+{
+  "model": {
+    "architecture": {
+      "layers": [
+        {
+          "in_features": 784,
+          "out_features": 512,
+          "activation": "none"
+        },
+        {
+          "in_features": 512,
+          "out_features": 512,
+          "activation": "none"
+        },
+        {
+          "in_features": 512,
+          "out_features": 10,
+          "activation": "none"
+        }
+      ]
+    }
+  }
+}
