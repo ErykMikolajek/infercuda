@@ -23,6 +23,10 @@ Layer::Layer(const Layer &other)
     b = new real_t[output_dim];
     std::memcpy(b, other.b, output_dim * sizeof(real_t));
   }
+
+  if (other.d_w && other.d_b && w && b) {
+      alloc_device();
+  }
 }
 
 Layer &Layer::operator=(const Layer &other) {
@@ -52,6 +56,10 @@ Layer &Layer::operator=(const Layer &other) {
   if (other.b) {
     b = new real_t[output_dim];
     std::memcpy(b, other.b, output_dim * sizeof(real_t));
+  }
+
+  if (other.d_w && other.d_b && w && b) {
+      alloc_device();
   }
 
   return *this;

@@ -43,6 +43,7 @@ __global__ void fc_forward_kernel_batch_dim_1(const real_t *input,
   }
 
   output[out_idx] = acc + bias[out_idx];
+  printf("Forward Output[%d] = %f\n", out_idx, output[out_idx]);
 }
 
 void fc_forward(const real_t *input, const real_t *weights, const real_t *bias,
@@ -53,6 +54,8 @@ void fc_forward(const real_t *input, const real_t *weights, const real_t *bias,
       output == nullptr) {
     throw std::runtime_error("One or more device pointers are null");
   }
+
+  printf("\n------ Fc Forward ------\n");
 
   size_t grid_size = (output_dim + BLOCK_SIZE - 1) / BLOCK_SIZE;
   if (batch_size == 1) {

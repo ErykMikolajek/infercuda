@@ -55,7 +55,17 @@ void Loader::load_weights(const char* bin, Layer* layers, size_t n_layers) {
         int out = layers[i].get_output_dim();
      
         real_t* weights = new real_t[in * out];
+		printf("Layer %d - number of weights: %d, number of biases: %d\n", i, in*out, out);
         size_t read_w = fread(weights, sizeof(real_t), in * out, file);
+
+        /*for (int j = 0; j < in * out; j++) {
+            if (weights[j] > 100 || weights[j] < -100) 
+			printf("Layer %d: weight[%d] = %f\n", i, j, weights[j]);
+
+            if (j == in*out -1)
+				printf("Last weight of layer [%d] %f\n", j, weights[j]);
+		}*/
+
         if (read_w != (size_t)(in * out)) {
             std::cerr << "Error reading weighs of layer: " << i << std::endl;
             fclose(file);
@@ -69,6 +79,14 @@ void Loader::load_weights(const char* bin, Layer* layers, size_t n_layers) {
             fclose(file);
             return;
         }
+
+        /*for (int j = 0; j < out; j++) {
+            if (biases[j] > 100 || biases[j] < -100)
+            printf("Layer %d: bias[%d] = %f\n", i, j, biases[j]);
+
+            if (j == out - 1)
+				printf("Last bias of layer [%d]: %f\n", j, biases[j]);
+        }*/
         
 		layers[i].init_weights(weights, biases);
         delete[] weights;

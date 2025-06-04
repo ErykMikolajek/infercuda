@@ -4,9 +4,10 @@
 #include "layer.h"
 #include "dataset_loader.h"
 
+
 int main() {
 	std::string model_cfg_file = "sample_models/model_cfg.json";
-	std::string model_weights_file = "sample_models/mnist_model.bin";
+	std::string model_weights_file = "sample_models/model.bin";
 
 	std::string dataset_file = "dataset/mnist_test.txt";
 
@@ -19,12 +20,11 @@ int main() {
 	real_t *data_device = nullptr;
 	DatasetLoader::allocate_on_device(data, &data_device, 28*28);
 
-	printf("Data: %f\n", data[0]);
-	printf("Target: %f\n", target[0]);
+	printf("Data1: %f\n", data[0]);
+	printf("Target1: %f\n", target[0]);
 
 	Network model_mnist = Network::from_file(model_cfg_file, model_weights_file);
 
-	//std::printf("Num layers: %zu", model_mnist.num_layers());
 	//model_mnist.print_network_stats();
 
 	real_t *output_device = model_mnist.forward(data_device);
@@ -32,7 +32,9 @@ int main() {
 	size_t output_size = model_mnist.get_layer(model_mnist.num_layers() - 1).get_output_dim();
 	real_t *output = DatasetLoader::deallocate_from_device(&output_device, output_size);
 
-	//printf("Output: %f\n", output[0]);
+	for (size_t i = 0; i < output_size; ++i) {
+		printf("Output[%zu]: %f\n", i, output[i]);
+	}
 
 	delete[] data;
 	delete[] target;
