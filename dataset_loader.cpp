@@ -91,8 +91,8 @@ void DatasetLoader::allocate_on_device(real_t* data, real_t** allocated_data, si
         throw std::runtime_error("Failed to copy weights to device: " +
             std::string(cudaGetErrorString(err)));
     }
-    if (allocated_data != nullptr)
-        printf("Data allocated successfully\n");
+    /*if (allocated_data != nullptr)
+        printf("Data allocated successfully\n");*/
 }
 
 real_t* DatasetLoader::deallocate_from_device(real_t** allocated_data, size_t data_size) {

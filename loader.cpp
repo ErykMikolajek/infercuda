@@ -55,7 +55,7 @@ void Loader::load_weights(const char* bin, Layer* layers, size_t n_layers) {
         int out = layers[i].get_output_dim();
      
         real_t* weights = new real_t[in * out];
-		printf("Layer %d - number of weights: %d, number of biases: %d\n", i, in*out, out);
+		//printf("Layer %d - number of weights: %d, number of biases: %d\n", i, in*out, out);
         size_t read_w = fread(weights, sizeof(real_t), in * out, file);
 
         /*for (int j = 0; j < in * out; j++) {

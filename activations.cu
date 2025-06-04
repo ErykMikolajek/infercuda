@@ -7,7 +7,7 @@ __global__ void relu_kernel(float *x, float *y, int len) {
   if (tid < len) {
     y[tid] = fmax(0.0f, x[tid]);
   }
-  printf("ReLU: y[%d] = %f\n", tid, y[tid]);
+  //printf("ReLU: y[%d] = %f\n", tid, y[tid]);
 };
 
 __global__ void find_max(const float *x, float *max_val, int len) {
@@ -66,11 +66,11 @@ void apply_activation(float *d, float *y, int len, int act) {
   size_t grid_size = (len + BLOCK_SIZE - 1) / BLOCK_SIZE;
   switch (act) {
   case 1:
-    printf("\n------ ReLU ------\n");
+    //printf("\n------ ReLU ------\n");
     relu_kernel<<<grid_size, BLOCK_SIZE>>>(d, y, len);
     break;
   case 0: {
-    printf("\n------ Softmax ------\n");
+    //printf("\n------ Softmax ------\n");
     float *temp_max, *temp_sum;
     cudaMalloc(&temp_max, grid_size * sizeof(float));
     cudaMalloc(&temp_sum, grid_size * sizeof(float));
@@ -92,7 +92,6 @@ void apply_activation(float *d, float *y, int len, int act) {
     } else {
       cudaMemcpy(&h_max, temp_max, sizeof(float), cudaMemcpyDeviceToHost);
     }
-    printf("h_max: %f\n", h_max);
 
     // Compute sum of exp(x_i - max)
     compute_sum<<<grid_size, BLOCK_SIZE, BLOCK_SIZE * sizeof(float)>>>(
@@ -111,8 +110,6 @@ void apply_activation(float *d, float *y, int len, int act) {
     } else {
       cudaMemcpy(&h_sum, temp_sum, sizeof(float), cudaMemcpyDeviceToHost);
     }
-
-    printf("h_sum: %f\n", h_sum);
 
     // Apply final softmax transformation
     softmax_kernel<<<grid_size, BLOCK_SIZE>>>(d, y, h_max, h_sum, len);

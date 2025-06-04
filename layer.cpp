@@ -160,9 +160,9 @@ void Layer::forward(const real_t *input, real_t *output) const {
     throw std::runtime_error("Device weights or biases not allocated.");
   }
 
-  printf("Forward pass through layer with input dimension %zu and output "
+  /*printf("Forward pass through layer with input dimension %zu and output "
          "dimension %zu\n",
-         input_dim, output_dim);
+         input_dim, output_dim);*/
 
   real_t *fc_output = nullptr;
   cudaError_t err = cudaMalloc(&fc_output, output_dim * sizeof(real_t));
