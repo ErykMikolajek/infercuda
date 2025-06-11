@@ -22,6 +22,7 @@ public:
 		size_t data_dim, size_t target_dim, bool ignore_header);
 	~DatasetLoader();
 	std::pair<real_t*, real_t*> DatasetLoader::get_next_sample(bool normalize=true);
+
 	static void allocate_on_device(real_t* data, real_t** allocated_data, size_t size);
 	static real_t* deallocate_from_device(real_t** allocated_data, size_t data_size);
 	

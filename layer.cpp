@@ -4,19 +4,34 @@
 #include <string>
 
 Layer::Layer()
-    : input_dim(0), output_dim(0), act(None), w(nullptr), b(nullptr),
-      d_w(nullptr), d_b(nullptr) {}
+    : type(None), input_dim(0), output_dim(0), kernel_h(0), kernel_w(0), act((Activation)None), 
+        w(nullptr), b(nullptr), d_w(nullptr), d_b(nullptr) {}
 
-Layer::Layer(size_t in_dim, size_t out_dim, Activation act_func)
-    : input_dim(in_dim), output_dim(out_dim), act(act_func), w(nullptr),
-      b(nullptr), d_w(nullptr), d_b(nullptr) {}
+Layer::Layer(LayerType layer_type, size_t in_dim, size_t out_dim, Activation act_func)
+    : type(layer_type), input_dim(in_dim), output_dim(out_dim), act(act_func), w(nullptr),
+      b(nullptr), d_w(nullptr), d_b(nullptr), kernel_h(0), kernel_w(0) {}
+
+Layer::Layer(LayerType layer_type, size_t in_dim, size_t out_dim, size_t kernel_height, size_t kernel_width, Activation act_func)
+    : type(layer_type), input_dim(in_dim), output_dim(out_dim), act(act_func), w(nullptr),
+    b(nullptr), d_w(nullptr), d_b(nullptr), kernel_h(kernel_height), kernel_w(kernel_width) {
+}
+
+Layer::Layer(LayerType layer_type, size_t kernel_height, size_t kernel_width)
+    : type(layer_type), input_dim(0), output_dim(0), act((Activation)None), w(nullptr),
+    b(nullptr), d_w(nullptr), d_b(nullptr), kernel_h(kernel_height), kernel_w(kernel_width) {
+}
 
 Layer::Layer(const Layer &other)
-    : input_dim(other.input_dim), output_dim(other.output_dim), act(other.act),
-      w(nullptr), b(nullptr), d_w(nullptr), d_b(nullptr) {
+    : type(other.type), input_dim(other.input_dim), output_dim(other.output_dim), act(other.act),
+	kernel_h(other.kernel_h), kernel_w(other.kernel_w), w(nullptr), b(nullptr), d_w(nullptr), d_b(nullptr) {
 
   if (other.w) {
-    w = new real_t[input_dim * output_dim];
+      size_t w_size;
+    if (type == Conv2D) w_size = input_dim * output_dim * other.kernel_h * other.kernel_w; 
+	else if (type = Linear) w_size = input_dim * output_dim;
+	else w_size = 0; 
+
+    w = new real_t[w_size];
     std::memcpy(w, other.w, input_dim * output_dim * sizeof(real_t));
   }
   if (other.b) {
@@ -40,8 +55,11 @@ Layer &Layer::operator=(const Layer &other) {
   if (d_b)
     cudaFree(d_b);
 
+  type = other.type;
   input_dim = other.input_dim;
   output_dim = other.output_dim;
+  kernel_h = other.kernel_h;
+  kernel_w = other.kernel_w;
   act = other.act;
 
   w = nullptr;

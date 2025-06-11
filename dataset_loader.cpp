@@ -73,6 +73,8 @@ std::pair<real_t*, real_t*> DatasetLoader::get_next_sample(bool normalize) {
     return std::make_pair(data, target);
 }
 
+
+
 void DatasetLoader::allocate_on_device(real_t* data, real_t** allocated_data, size_t size) {
     cudaError_t err;
 
