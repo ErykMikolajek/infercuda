@@ -5,17 +5,17 @@
         {
           "in_features": 784,
           "out_features": 512,
-          "activation": "none"
+          "activation": "relu"
         },
         {
           "in_features": 512,
           "out_features": 512,
-          "activation": "none"
+          "activation": "relu"
         },
         {
           "in_features": 512,
           "out_features": 10,
-          "activation": "none"
+          "activation": "softmax"
         }
       ]
     }
