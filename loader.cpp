@@ -27,37 +27,32 @@ std::pair<Layer *, size_t> Loader::load_cfg(const char *cfg) {
 
   for (int i = 0; i < n_layers; ++i) {
     const auto &l = layers_json[i];
-
-    std::string act_string = l["activation"];
+    
     Activation act;
+    if (l.contains("activation")) {
+        std::string act_string = l["activation"];
 
-    if (act_string == "relu")
-      act = Activation::ReLU;
-    else if (act_string == "softmax")
-      act = Activation::Softmax;
+        if (act_string == "relu")
+            act = Activation::ReLU;
+        else if (act_string == "softmax")
+            act = Activation::Softmax;
+	}
     else
-      act = Activation::None;
+        act = Activation::None;
+    
 
-    switch (l["type"]) {
-    case "conv2d":
-      layers[i] = Layer(LayerType::Conv2D, l["in_features"], l["out_features"],
-                        l["kernel_size"][0], l["kernel_size"][1], act);
-      break;
-    case "linear":
-      layers[i] =
-          Layer(LayerType::Linear, l["in_features"], l["out_features"], act);
-      break;
-    case "maxpool2d":
-      layers[i] =
-          Layer(LayerType::Pooling, l["kernel_size"][0], l["kernel_size"][1]);
-      break;
-    case "flatten":
-      layers[i] = Layer(LayerType::Flatten);
-      break;
-    default:
-      layers[i] = Layer();
-      break;
-    }
+    if (l["type"] == "conv2d") 
+        layers[i] = Layer(LayerType::Conv2D, l["in_channels"], l["out_channels"],
+            l["kernel_size"][0], l["kernel_size"][1], act);
+    else if (l["type"] == "linear") 
+        layers[i] = Layer(LayerType::Linear, l["in_features"], l["out_features"], act);
+    else if (l["type"] == "maxpool2d")
+        layers[i] = Layer(LayerType::Pooling, l["kernel_size"][0], l["kernel_size"][1]);
+    else if (l["type"] == "flatten")
+        layers[i] = Layer(LayerType::Flatten);
+    else
+        layers[i] = Layer();
+    
   }
 
   return std::make_pair(layers, n_layers);
@@ -100,7 +95,7 @@ void Loader::load_weights(const char *bin, Layer *layers, size_t n_layers) {
           printf("Layer %d: weight[%d] = %f\n", i, j, weights[j]);
 
         if (j == w_size - 1)
-          printf("Last weight of layer [%d] %f\n", j, weights[j]);
+          printf("Last weight (%d) of layer: %f\n", j, weights[j]);
       }
       //// DEBUG PRINT
 
@@ -118,7 +113,7 @@ void Loader::load_weights(const char *bin, Layer *layers, size_t n_layers) {
           printf("Layer %d: bias[%d] = %f\n", i, j, biases[j]);
 
         if (j == out_dim - 1)
-          printf("Last bias of layer [%d]: %f\n", j, biases[j]);
+          printf("Last bias (%d) of layer: %f\n", j, biases[j]);
       }
       //// DEBUG PRINT
 
@@ -140,7 +135,9 @@ void Loader::load_weights(const char *bin, Layer *layers, size_t n_layers) {
 void Loader::allocate_on_device(Network &n) {
   for (int i = 0; i < n.num_layers(); i++) {
     Layer &l = n.get_layer(i);
-    l.alloc_device();
+    if (l.get_type() == LayerType::Conv2D || l.get_type() == LayerType::Linear) {
+      l.alloc_device();
+	}
   }
 }
 
