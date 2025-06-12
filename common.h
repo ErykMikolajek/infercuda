@@ -2,8 +2,8 @@
 #define COMMON_H
 
 #include <cuda_runtime.h>
-#include "device_launch_parameters.h"
-#include <memory>
+#include <device_launch_parameters.h>
+#include <iostream>
 
 using real_t = float;
 constexpr int BLOCK_SIZE = 256;
