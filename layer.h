@@ -2,7 +2,6 @@
 #define LAYER_H
 
 #include "common.h"
-// #include "kernels.h"
 
 enum Activation { None = -1, Softmax = 0, ReLU = 1, Sigmoid = 2 };
 
@@ -27,7 +26,6 @@ private:
 
 public:
   Layer();
-  // Layer(size_t in_dim, size_t out_dim, Activation act_func); // TODO: remove
   Layer(LayerType layer_type, size_t in_dim, size_t out_dim,
         Activation act_func);
   Layer(LayerType layer_type, size_t in_dim, size_t out_dim,

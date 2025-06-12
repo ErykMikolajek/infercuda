@@ -4,10 +4,12 @@
 
 #define BLOCK_SIZE 256
 
-__global__ void fc_forward_kernel(const real_t *input, const real_t *weights,
-                                  const real_t *bias, real_t *output,
-                                  int batch_size, int input_dim,
-                                  int output_dim) {
+// TODO: Implement this kernel: batch matrix * weights matrix + bias
+__global__ void fc_forward_kernel_batch_dim_n(const real_t *input,
+                                              const real_t *weights,
+                                              const real_t *bias,
+                                              real_t *output, int batch_size,
+                                              int input_dim, int output_dim) {
 
   int tid = blockIdx.x * blockDim.x + threadIdx.x;
   int total_outputs = batch_size * output_dim;
@@ -43,7 +45,7 @@ __global__ void fc_forward_kernel_batch_dim_1(const real_t *input,
   }
 
   output[out_idx] = acc + bias[out_idx];
-  //printf("Forward Output[%d] = %f\n", out_idx, output[out_idx]);
+  // printf("Forward Output[%d] = %f\n", out_idx, output[out_idx]);
 }
 
 void fc_forward(const real_t *input, const real_t *weights, const real_t *bias,
@@ -55,14 +57,14 @@ void fc_forward(const real_t *input, const real_t *weights, const real_t *bias,
     throw std::runtime_error("One or more device pointers are null");
   }
 
-  //printf("\n------ Fc Forward ------\n");
+  // printf("\n------ Fc Forward ------\n");
 
   size_t grid_size = (output_dim + BLOCK_SIZE - 1) / BLOCK_SIZE;
   if (batch_size == 1) {
     fc_forward_kernel_batch_dim_1<<<grid_size, BLOCK_SIZE>>>(
         input, weights, bias, output, input_dim, output_dim);
   } else {
-    fc_forward_kernel<<<grid_size, BLOCK_SIZE>>>(
+    fc_forward_kernel_batch_dim_n<<<grid_size, BLOCK_SIZE>>>(
         input, weights, bias, output, batch_size, input_dim, output_dim);
   }
 
