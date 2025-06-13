@@ -6,8 +6,8 @@
 
 
 int main() {
-	std::string model_cfg_file = "sample_models/model_cfg.json";
-	std::string model_weights_file = "sample_models/model.bin";
+	std::string model_cfg_file = "sample_models/mlp_model_cfg.json";
+	std::string model_weights_file = "sample_models/mlp_model.bin";
 
 	std::string dataset_file = "dataset/mnist_test.txt";
 
@@ -25,7 +25,7 @@ int main() {
 	Network model_mnist = Network::from_file(model_cfg_file, model_weights_file);
 
 	//model_mnist.print_network_stats();
-
+	
 	real_t *output_device = model_mnist.forward(data_device);
 
 	size_t output_size = model_mnist.get_layer(model_mnist.num_layers() - 1).get_output_dim();
@@ -48,11 +48,11 @@ int main() {
 	for (int i = 0; i < output_size; ++i) {
 		printf("Number %d probability: %f\n", i, output[i] * 100);
 	}
-
+	
 
 	delete[] data;
 	delete[] target;
-	delete[] output;
+	//delete[] output;
 	
 	return 0;
 }
