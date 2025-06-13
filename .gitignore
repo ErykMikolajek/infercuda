@@ -402,3 +402,4 @@ FodyWeavers.xsd
 
 .clangd
 .DS_Store
+.clang-format
