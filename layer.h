@@ -13,6 +13,12 @@ enum LayerType {
     Pooling = 3
 };
 
+struct LayerDimensions {
+    size_t height;
+    size_t width;
+    size_t channels;
+};
+
 class Layer {
   private:
     size_t input_dim, output_dim;
@@ -42,11 +48,13 @@ class Layer {
     size_t get_kernel_h() const;
     size_t get_kernel_w() const;
     LayerType get_type() const;
+    LayerDimensions get_output_dimensions(size_t input_height,
+                                          size_t input_width,
+                                          size_t input_channels) const;
     void alloc_device();
 
-    void forward(const real_t *input, real_t *output) const;
-    void forward(const real_t *input, real_t *output, size_t h_in,
-                 size_t w_in) const;
+    void forward(const real_t *input, real_t *output, size_t h_in = 0,
+                 size_t w_in = 0) const;
 
     void print_layer_stats() const;
 };

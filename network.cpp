@@ -83,9 +83,17 @@ void Network::print_network_stats() const {
     }
 }
 
+bool Network::requires_input_dimensions() const {
+    if (n_layers == 0)
+        return false;
+    return layers[0].get_type() == LayerType::Conv2D;
+}
+
 real_t *Network::forward(real_t *input) const {
-    if (layers[0].get_type() == LayerType::Conv2D && (h_in == 0 || w_in == 0)) {
-        throw std::runtime_error("Input dimensions not set");
+    if (requires_input_dimensions() && (h_in == 0 || w_in == 0)) {
+        throw std::runtime_error("Input dimensions (height and width) must be "
+                                 "set for Conv2D networks. "
+                                 "Call set_input_dim() before forward()");
     }
 
     if (n_layers == 0) {
@@ -107,30 +115,13 @@ real_t *Network::forward(real_t *input) const {
 
     size_t h_in = this->h_in;
     size_t w_in = this->w_in;
-    size_t w_out, h_out;
 
     for (size_t i = 0; i < n_layers; ++i) {
 
-        size_t output_size;
-        switch (layers[i].get_type()) {
-        case LayerType::Conv2D: {
-            size_t stride = 1;  // TODO: implement variable stride
-            size_t padding = 1; // TODO: implement variable padding
-            w_out =
-                (w_in - layers[i].get_kernel_w() + 2 * padding) / stride + 1;
-            h_out =
-                (h_in - layers[i].get_kernel_h() + 2 * padding) / stride + 1;
-            output_size = w_out * h_out * layers[i].get_output_dim();
-            break;
-        }
-        case LayerType::Linear:
-            output_size = layers[i].get_output_dim();
-            break;
-        default:
-            throw std::runtime_error(
-                "Unsupported layer type: " +
-                std::to_string(static_cast<int>(layers[i].get_type())));
-        }
+        auto output_dims = layers[i].get_output_dimensions(
+            h_in, w_in, layers[i].get_input_dim());
+        size_t output_size =
+            output_dims.height * output_dims.width * output_dims.channels;
 
         if (i == n_layers - 1) {
             current_output = final_output;
@@ -157,8 +148,8 @@ real_t *Network::forward(real_t *input) const {
         }
 
         current_input = current_output;
-        h_in = h_out;
-        w_in = w_out;
+        h_in = output_dims.height;
+        w_in = output_dims.width;
     }
 
     cudaDeviceSynchronize();

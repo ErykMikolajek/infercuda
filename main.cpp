@@ -29,7 +29,11 @@ int main() {
 
     model_mnist.print_network_stats();
 
-    // real_t *output_device = model_mnist.forward(data_device);
+    if (model_mnist.requires_input_dimensions()) {
+        model_mnist.set_input_dim(28, 28); // Set dimensions for MNIST images
+    }
+
+    real_t *output_device = model_mnist.forward(data_device);
 
     // size_t output_size = model_mnist.get_layer(model_mnist.num_layers() -
     // 1).get_output_dim(); real_t *output =

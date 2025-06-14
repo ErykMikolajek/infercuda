@@ -140,6 +140,35 @@ size_t Layer::get_kernel_h() const { return kernel_h; };
 size_t Layer::get_kernel_w() const { return kernel_w; };
 LayerType Layer::get_type() const { return type; };
 
+LayerDimensions Layer::get_output_dimensions(size_t input_height,
+                                             size_t input_width,
+                                             size_t input_channels) const {
+    const size_t stride = 1;  // TODO: make configurable
+    const size_t padding = 1; // TODO: make configurable
+
+    switch (type) {
+    case Conv2D: {
+        const size_t output_height =
+            (input_height - kernel_h + 2 * padding) / stride + 1;
+        const size_t output_width =
+            (input_width - kernel_w + 2 * padding) / stride + 1;
+        return {output_height, output_width, output_dim};
+    }
+    case Linear:
+        return {1, 1, output_dim}; // Linear layers output a 1D vector
+    case Pooling: {
+        const size_t output_height = input_height / kernel_h;
+        const size_t output_width = input_width / kernel_w;
+        return {output_height, output_width, input_channels};
+    }
+    case Flatten:
+        return {1, 1, input_height * input_width * input_channels};
+    default:
+        throw std::runtime_error(
+            "Unsupported layer type in get_output_dimensions");
+    }
+}
+
 void Layer::alloc_device() {
     cudaError_t err;
 
@@ -217,7 +246,8 @@ void Layer::print_layer_stats() const {
     std::printf("\n");
 }
 
-void Layer::forward(const real_t *input, real_t *output) const {
+void Layer::forward(const real_t *input, real_t *output, size_t h_in,
+                    size_t w_in) const {
     if (input == nullptr) {
         throw std::runtime_error("Input pointer is null.");
     }
@@ -228,10 +258,6 @@ void Layer::forward(const real_t *input, real_t *output) const {
         throw std::runtime_error("Device weights or biases not allocated.");
     }
 
-    /*printf("Forward pass through layer with input dimension %zu and output "
-           "dimension %zu\n",
-           input_dim, output_dim);*/
-
     real_t *fc_output = nullptr;
     cudaError_t err = cudaMalloc(&fc_output, output_dim * sizeof(real_t));
     if (err != cudaSuccess) {
@@ -239,14 +265,36 @@ void Layer::forward(const real_t *input, real_t *output) const {
                                  std::string(cudaGetErrorString(err)));
     }
 
-    fc_forward(input, d_w, d_b, fc_output, 1, input_dim, output_dim);
+    switch (type) {
+    case Conv2D:
+        conv2d_forward(input, d_w, d_b, fc_output, 1, input_dim, output_dim,
+                       kernel_h, kernel_w, h_in, w_in);
+        break;
+    case Linear:
+        fc_forward(input, d_w, d_b, fc_output, 1, input_dim, output_dim);
+        break;
+    case Pooling:
+        maxpool2d_forward(input, fc_output, 1, input_dim, output_dim, kernel_h,
+                          kernel_w, h_in, w_in);
+        break;
+    case Flatten:
+        break;
+    default:
+        throw std::runtime_error("Unsupported layer type: " +
+                                 std::to_string(type));
+    }
+
+    auto output_dims = get_output_dimensions(h_in, w_in, input_dim);
+    size_t output_size =
+        output_dims.height * output_dims.width * output_dims.channels;
+
     cudaDeviceSynchronize();
 
     if (act != Activation::None) {
-        apply_activation(fc_output, output, output_dim, act);
+        apply_activation(fc_output, output, output_size, act);
         cudaDeviceSynchronize();
     } else {
-        err = cudaMemcpy(output, fc_output, output_dim * sizeof(real_t),
+        err = cudaMemcpy(output, fc_output, output_size * sizeof(real_t),
                          cudaMemcpyDeviceToDevice);
         if (err != cudaSuccess) {
             cudaFree(fc_output);
@@ -256,11 +304,4 @@ void Layer::forward(const real_t *input, real_t *output) const {
     }
 
     cudaFree(fc_output);
-}
-
-void Layer::forward(const real_t *input, real_t *output, size_t h_in,
-                    size_t w_in) const {
-    if (type != Conv2D) {
-        throw std::runtime_error("Layer is not a Conv2D layer.");
-    }
 }

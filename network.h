@@ -26,6 +26,7 @@ class Network {
     size_t num_layers() const;
     void set_input_dim(size_t h, size_t w);
     Layer &get_layer(size_t layer_index) const;
+    bool requires_input_dimensions() const;
 
     real_t *forward(real_t *input) const;
 

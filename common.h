@@ -7,5 +7,6 @@
 
 using real_t = float;
 constexpr int BLOCK_SIZE = 256;
+constexpr real_t FLT_MAX = std::numeric_limits<float>::max();
 
 #endif // COMMON_H
