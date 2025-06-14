@@ -25,8 +25,8 @@ Layer::Layer(LayerType layer_type, size_t kernel_height, size_t kernel_width,
       w(nullptr), b(nullptr), d_w(nullptr), d_b(nullptr),
       kernel_h(kernel_height), kernel_w(kernel_width) {}
 
-Layer::Layer(LayerType layer_type) // Flatten
-    : type(layer_type), input_dim(0), output_dim(0), act(None), w(nullptr),
+Layer::Layer(LayerType layer_type, size_t out_dim) // Flatten
+    : type(layer_type), input_dim(out_dim), output_dim(out_dim), act(None), w(nullptr),
       b(nullptr), d_w(nullptr), d_b(nullptr), kernel_h(0), kernel_w(0) {}
 
 Layer::Layer(const Layer &other)
@@ -335,7 +335,6 @@ void Layer::forward(const real_t *input, real_t *output, size_t h_in,
         apply_activation(layer_output, output, output_size, act);
         cudaDeviceSynchronize();
     } else {
-        // Copy the result to the output buffer
         err = cudaMemcpy(output, layer_output, output_size * sizeof(real_t),
                          cudaMemcpyDeviceToDevice);
         if (err != cudaSuccess) {

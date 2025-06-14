@@ -22,7 +22,7 @@ int main() {
     real_t *data_device = nullptr;
     DatasetLoader::allocate_on_device(data, &data_device, 28 * 28);
 
-    // printf("Target1: %f\n", target[0]);
+    printf("Target1: %f\n", target[0]);
 
     Network model_mnist =
         Network::from_file(model_cfg_file, model_weights_file);
@@ -35,32 +35,31 @@ int main() {
 
     real_t *output_device = model_mnist.forward(data_device);
 
-    // size_t output_size = model_mnist.get_layer(model_mnist.num_layers() -
-    // 1).get_output_dim(); real_t *output =
-    // DatasetLoader::deallocate_from_device(&output_device, output_size);
+    size_t output_size = model_mnist.get_layer(model_mnist.num_layers() - 1).get_output_dim(); 
+    real_t *output = DatasetLoader::deallocate_from_device(&output_device, output_size);
 
-    // for (int i = 0; i < output_size; ++i) {
-    //	printf("Number %d probability: %f\n", i, output[i]*100);
-    // }
+    for (int i = 0; i < output_size; ++i) {
+    	printf("Number %d probability: %f\n", i, output[i]*100);
+     }
 
     //// Another pass:
-    // std::tie(data, target) = dataset_loader.get_next_sample();
+    std::tie(data, target) = dataset_loader.get_next_sample();
 
-    // DatasetLoader::allocate_on_device(data, &data_device, 28 * 28);
+    DatasetLoader::allocate_on_device(data, &data_device, 28 * 28);
 
-    // printf("Target2: %f\n", target[0]);
+    printf("Target2: %f\n", target[0]);
 
-    // output_device = model_mnist.forward(data_device);
-    // output = DatasetLoader::deallocate_from_device(&output_device,
-    // output_size);
+    output_device = model_mnist.forward(data_device);
+    output = DatasetLoader::deallocate_from_device(&output_device,
+    output_size);
 
-    // for (int i = 0; i < output_size; ++i) {
-    //	printf("Number %d probability: %f\n", i, output[i] * 100);
-    // }
+    for (int i = 0; i < output_size; ++i) {
+    	printf("Number %d probability: %f\n", i, output[i] * 100);
+    }
 
     delete[] data;
     delete[] target;
-    // delete[] output;
+    delete[] output;
 
     return 0;
 }

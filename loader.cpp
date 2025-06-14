@@ -52,8 +52,11 @@ std::pair<Layer *, size_t> Loader::load_cfg(const char *cfg) {
             layers[i] = Layer(LayerType::Pooling, l["kernel_size"][0],
                 l["kernel_size"][1], out_channels);
         }
-        else if (l["type"] == "flatten")
-            layers[i] = Layer(LayerType::Flatten);
+        else if (l["type"] == "flatten") {
+            const auto& prev_l = layers_json[i - 2];
+            size_t out_channels = prev_l["out_channels"];
+            layers[i] = Layer(LayerType::Flatten, out_channels);
+        }
         else
             layers[i] = Layer();
     }
