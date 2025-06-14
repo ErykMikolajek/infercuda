@@ -36,7 +36,8 @@ class Layer {
           Activation act_func);
     Layer(LayerType layer_type, size_t in_dim, size_t out_dim,
           size_t kernel_height, size_t kernel_width, Activation act_func);
-    Layer(LayerType layer_type, size_t kernel_height, size_t kernel_width);
+    Layer::Layer(LayerType layer_type, size_t kernel_height,
+        size_t kernel_width, size_t in_dim);
     Layer(LayerType layer_type);
     Layer(const Layer &other);
     Layer &operator=(const Layer &other);

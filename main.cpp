@@ -27,7 +27,7 @@ int main() {
     Network model_mnist =
         Network::from_file(model_cfg_file, model_weights_file);
 
-    model_mnist.print_network_stats();
+    //model_mnist.print_network_stats();
 
     if (model_mnist.requires_input_dimensions()) {
         model_mnist.set_input_dim(28, 28); // Set dimensions for MNIST images

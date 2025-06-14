@@ -10,8 +10,10 @@ void __global__ maxpool2d_forward_kernel_batch_dim_1(
     int out_y = blockIdx.y * blockDim.y + threadIdx.y;
 
     if (out_x < w_out && out_y < h_out) {
+		//printf("MaxPool2D Forward: Processing output pixel (%d, %d)\n", out_y, out_x);
         for (int c = 0; c < output_dim; c++) {
-            real_t max_val = -FLT_MAX;
+			//printf("MaxPool2D Forward: Processing channel %d\n", c);
+            real_t max_val = -REAL_MAX;
 
             for (int py = 0; py < kernel_h; py++) {
                 for (int px = 0; px < kernel_w; px++) {
@@ -26,6 +28,8 @@ void __global__ maxpool2d_forward_kernel_batch_dim_1(
             }
             output[out_y * w_out * output_dim + out_x * output_dim + c] =
                 max_val;
+            //printf("MaxPool2D Forward: out[%d, %d, %d] = %f\n", out_y, out_x, c,
+			//	max_val);
         }
     }
 }
@@ -37,7 +41,7 @@ void calculate_output_dimensions(size_t h_in, size_t w_in, size_t kernel_size,
 }
 
 void maxpool2d_forward(const real_t *input, real_t *output, size_t batch_size,
-                       size_t input_dim, size_t output_dim, size_t kernel_h,
+                       size_t input_channels, size_t output_channels, size_t kernel_h,
                        size_t kernel_w, size_t h_in, size_t w_in) {
 
     size_t h_out, w_out;
@@ -45,9 +49,12 @@ void maxpool2d_forward(const real_t *input, real_t *output, size_t batch_size,
 
     dim3 grid_size((w_out + BLOCK_SIZE - 1) / BLOCK_SIZE,
                    (h_out + BLOCK_SIZE - 1) / BLOCK_SIZE);
+
+    printf("\n------ MaxPool Forward ------\n");
+
     if (batch_size == 1) {
         maxpool2d_forward_kernel_batch_dim_1<<<grid_size, BLOCK_SIZE>>>(
-            input, output, input_dim, output_dim, kernel_h, kernel_w, h_in,
+            input, output, input_channels, output_channels, kernel_h, kernel_w, h_in,
             w_in, h_out, w_out);
     } else {
         throw std::runtime_error(

@@ -137,11 +137,8 @@ real_t *Network::forward(real_t *input) const {
             }
         }
 
-        if (layers[i].get_type() == LayerType::Conv2D) {
-            layers[i].forward(current_input, current_output, h_in, w_in);
-        } else {
-            layers[i].forward(current_input, current_output);
-        }
+        layers[i].forward(current_input, current_output, h_in, w_in);
+        //layers[i].forward(current_input, current_output);
 
         if (i > 0 && current_input != input) {
             cudaFree(current_input);

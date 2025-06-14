@@ -20,8 +20,8 @@ Layer::Layer(LayerType layer_type, size_t in_dim, size_t out_dim,
       kernel_h(kernel_height), kernel_w(kernel_width) {}
 
 Layer::Layer(LayerType layer_type, size_t kernel_height,
-             size_t kernel_width) // Pooling
-    : type(layer_type), input_dim(0), output_dim(0), act(None), w(nullptr),
+             size_t kernel_width, size_t in_dim) // Pooling
+    : type(layer_type), input_dim(in_dim), output_dim(in_dim), act(None), w(nullptr),
       b(nullptr), d_w(nullptr), d_b(nullptr), kernel_h(kernel_height),
       kernel_w(kernel_width) {}
 
@@ -222,40 +222,57 @@ void Layer::print_layer_stats() const {
     std::printf("Activation function: %d\n", act);
 
     size_t weights_size;
-    if (type == Conv2D)
-        weights_size = input_dim * output_dim * kernel_h * kernel_w;
-    else if (type == Linear)
-        weights_size = input_dim * output_dim;
-    else
-        weights_size = 0;
+    switch (type) {
+        case Conv2D:
+            weights_size = input_dim * output_dim * kernel_h * kernel_w;
+            std::printf("Weights size: %zu bytes\n", weights_size * sizeof(real_t));
+            std::printf("First 5 weights: ");
+            for (size_t i = 0; i < std::min<size_t>(5, weights_size); ++i) {
+                std::printf("%f ", w[i]);
+            }
+            std::printf("\n");
 
-    std::printf("Weights size: %zu bytes\n", weights_size * sizeof(real_t));
+            std::printf("Biases size: %zu bytes\n", output_dim * sizeof(real_t));
 
-    std::printf("First 5 weights: ");
-    for (size_t i = 0; i < std::min<size_t>(5, weights_size); ++i) {
-        std::printf("%f ", w[i]);
+            std::printf("First 5 biases: ");
+            for (size_t i = 0; i < std::min<size_t>(5, output_dim); ++i) {
+                std::printf("%f ", b[i]);
+            }
+            std::printf("\n");
+            break;
+        case Linear:
+            weights_size = input_dim * output_dim;
+			
+            std::printf("Weights size: %zu bytes\n", weights_size * sizeof(real_t));
+            std::printf("First 5 weights: ");
+            for (size_t i = 0; i < std::min<size_t>(5, weights_size); ++i) {
+                std::printf("%f ", w[i]);
+            }
+            std::printf("\n");
+
+            std::printf("Biases size: %zu bytes\n", output_dim * sizeof(real_t));
+
+            std::printf("First 5 biases: ");
+            for (size_t i = 0; i < std::min<size_t>(5, output_dim); ++i) {
+                std::printf("%f ", b[i]);
+            }
+            std::printf("\n");
+			break;
+        case Pooling:
+            std::printf("Pooling layer: no weights.\n");
+            break;
+        case Flatten:
+            std::printf("Flatten layer: no weights.\n");
+            break;
+        default:
+			throw std::runtime_error("Unsupported layer type in print_layer_stats");
     }
-    std::printf("\n");
-
-    std::printf("Biases size: %zu bytes\n", output_dim * sizeof(real_t));
-
-    std::printf("First 5 biases: ");
-    for (size_t i = 0; i < std::min<size_t>(5, output_dim); ++i) {
-        std::printf("%f ", b[i]);
-    }
-    std::printf("\n");
 }
 
 void Layer::forward(const real_t *input, real_t *output, size_t h_in,
                     size_t w_in) const {
     if (input == nullptr) {
         throw std::runtime_error("Input pointer is null.");
-    }
-    if (w == nullptr || b == nullptr) {
-        throw std::runtime_error("Weights or biases not initialized.");
-    }
-    if (d_w == nullptr || d_b == nullptr) {
-        throw std::runtime_error("Device weights or biases not allocated.");
     }
 
     real_t *fc_output = nullptr;
@@ -267,21 +284,37 @@ void Layer::forward(const real_t *input, real_t *output, size_t h_in,
 
     switch (type) {
     case Conv2D:
+        if (w == nullptr || b == nullptr) {
+            throw std::runtime_error("Weights or biases not initialized.");
+        }
+        if (d_w == nullptr || d_b == nullptr) {
+            throw std::runtime_error("Device weights or biases not allocated.");
+        }
         conv2d_forward(input, d_w, d_b, fc_output, 1, input_dim, output_dim,
                        kernel_h, kernel_w, h_in, w_in);
+		printf("Conv2D forward pass completed.\n");
         break;
     case Linear:
+        if (w == nullptr || b == nullptr) {
+            throw std::runtime_error("Weights or biases not initialized.");
+        }
+        if (d_w == nullptr || d_b == nullptr) {
+            throw std::runtime_error("Device weights or biases not allocated.");
+        }
         fc_forward(input, d_w, d_b, fc_output, 1, input_dim, output_dim);
+		printf("Linear forward pass completed.\n");
         break;
     case Pooling:
         maxpool2d_forward(input, fc_output, 1, input_dim, output_dim, kernel_h,
                           kernel_w, h_in, w_in);
+		printf("Pooling forward pass completed.\n");
         break;
     case Flatten:
+		printf("\nFlattening input of size %zu x %zu x %zu\n", h_in, w_in, input_dim);
+		fc_output = const_cast<real_t*>(input);
         break;
     default:
-        throw std::runtime_error("Unsupported layer type: " +
-                                 std::to_string(type));
+        throw std::runtime_error("Unsupported layer type");
     }
 
     auto output_dims = get_output_dimensions(h_in, w_in, input_dim);
@@ -293,7 +326,9 @@ void Layer::forward(const real_t *input, real_t *output, size_t h_in,
     if (act != Activation::None) {
         apply_activation(fc_output, output, output_size, act);
         cudaDeviceSynchronize();
-    } else {
+    } 
+    
+    /*else {
         err = cudaMemcpy(output, fc_output, output_size * sizeof(real_t),
                          cudaMemcpyDeviceToDevice);
         if (err != cudaSuccess) {
@@ -301,7 +336,7 @@ void Layer::forward(const real_t *input, real_t *output, size_t h_in,
             throw std::runtime_error("Failed to copy FC output: " +
                                      std::string(cudaGetErrorString(err)));
         }
-    }
+    }*/
 
     cudaFree(fc_output);
 }

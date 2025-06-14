@@ -120,11 +120,12 @@ void conv2d_forward(const real_t *input, const real_t *weights,
     dim3 gridDim((W_out + TILE_SIZE - 1) / TILE_SIZE,
                  (H_out + TILE_SIZE - 1) / TILE_SIZE);
 
-    // Calculate shared memory size
+    
     int SHARED_SIZE = TILE_SIZE + kernel_h - 1;
     size_t shared_mem_size = SHARED_SIZE * SHARED_SIZE * sizeof(real_t);
 
-    // Launch kernel
+    printf("\n------ Conv2D Forward ------\n");
+    
     if (batch_size == 1) {
         conv_forward_kernel_batch_dim_1<<<gridDim, blockDim, shared_mem_size>>>(
             input, weights, bias, output, input_channels, output_channels, H_in,
@@ -134,7 +135,6 @@ void conv2d_forward(const real_t *input, const real_t *weights,
             "Batch size > 1 not implemented for conv2d_forward");
     }
 
-    // Check for kernel launch errors
     cudaError_t err = cudaGetLastError();
     if (err != cudaSuccess) {
         printf("CUDA Conv2D kernel launch error: %s\n",

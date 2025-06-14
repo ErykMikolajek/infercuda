@@ -57,7 +57,7 @@ void fc_forward(const real_t *input, const real_t *weights, const real_t *bias,
         throw std::runtime_error("One or more device pointers are null");
     }
 
-    // printf("\n------ Fc Forward ------\n");
+    printf("\n------ Fc Forward ------\n");
 
     size_t grid_size = (output_dim + BLOCK_SIZE - 1) / BLOCK_SIZE;
     if (batch_size == 1) {

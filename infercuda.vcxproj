@@ -13,6 +13,7 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{E6D92D42-6DE7-E0DF-A39C-AB3C2D80B200}</ProjectGuid>
     <RootNamespace>infercuda</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0.26100.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
@@ -88,11 +89,12 @@
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="activations.cu" />
+    <CudaCompile Include="conv_kernel.cu" />
     <CudaCompile Include="fc_kernel.cu" />
+    <CudaCompile Include="maxpool_kernel.cu" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dataset_loader.cpp" />
-    <ClCompile Include="infer.cpp" />
     <ClCompile Include="layer.cpp" />
     <ClCompile Include="loader.cpp" />
     <ClCompile Include="main.cpp" />

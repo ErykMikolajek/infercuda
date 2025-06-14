@@ -46,9 +46,12 @@ std::pair<Layer *, size_t> Loader::load_cfg(const char *cfg) {
         else if (l["type"] == "linear")
             layers[i] = Layer(LayerType::Linear, l["in_features"],
                               l["out_features"], act);
-        else if (l["type"] == "maxpool2d")
+        else if (l["type"] == "maxpool2d") {
+            const auto& prev_l = layers_json[i - 1];
+			size_t out_channels = prev_l["out_channels"];
             layers[i] = Layer(LayerType::Pooling, l["kernel_size"][0],
-                              l["kernel_size"][1]);
+                l["kernel_size"][1], out_channels);
+        }
         else if (l["type"] == "flatten")
             layers[i] = Layer(LayerType::Flatten);
         else
@@ -90,6 +93,7 @@ void Loader::load_weights(const char *bin, Layer *layers, size_t n_layers) {
             size_t read_w = fread(weights, sizeof(real_t), w_size, file);
 
             //// DEBUG PRINT
+            /*
             for (int j = 0; j < w_size; j++) {
                 if (weights[j] > 100 || weights[j] < -100)
                     printf("Layer %d: weight[%d] = %f\n", i, j, weights[j]);
@@ -97,6 +101,7 @@ void Loader::load_weights(const char *bin, Layer *layers, size_t n_layers) {
                 if (j == w_size - 1)
                     printf("Last weight (%d) of layer: %f\n", j, weights[j]);
             }
+            */
             //// DEBUG PRINT
 
             if (read_w != (size_t)w_size) {
@@ -109,6 +114,7 @@ void Loader::load_weights(const char *bin, Layer *layers, size_t n_layers) {
             size_t read_b = fread(biases, sizeof(real_t), out_dim, file);
 
             //// DEBUG PRINT
+            /*
             for (int j = 0; j < out_dim; j++) {
                 if (biases[j] > 100 || biases[j] < -100)
                     printf("Layer %d: bias[%d] = %f\n", i, j, biases[j]);
@@ -116,7 +122,7 @@ void Loader::load_weights(const char *bin, Layer *layers, size_t n_layers) {
                 if (j == out_dim - 1)
                     printf("Last bias (%d) of layer: %f\n", j, biases[j]);
             }
-            //// DEBUG PRINT
+            *//// DEBUG PRINT
 
             if (read_b != (size_t)out_dim) {
                 std::cerr << "Error reading biases of layer: " << i
