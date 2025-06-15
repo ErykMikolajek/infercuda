@@ -9,23 +9,7 @@ __global__ void fc_forward_kernel_batch_dim_n(const real_t *input,
                                               const real_t *weights,
                                               const real_t *bias,
                                               real_t *output, int batch_size,
-                                              int input_dim, int output_dim) {
-
-    int tid = blockIdx.x * blockDim.x + threadIdx.x;
-    int total_outputs = batch_size * output_dim;
-
-    if (tid < total_outputs) {
-        int batch_idx = tid / output_dim;
-        int out_idx = tid % output_dim;
-
-        real_t sum = bias[out_idx];
-        for (int i = 0; i < input_dim; i++) {
-            sum += input[batch_idx * input_dim + i] *
-                   weights[out_idx * input_dim + i];
-        }
-        output[tid] = sum;
-    }
-}
+                                              int input_dim, int output_dim) {}
 
 __global__ void fc_forward_kernel_batch_dim_1(const real_t *input,
                                               const real_t *weights,
