@@ -147,7 +147,42 @@ infercuda/
     -   Standard I/O libraries
     -   nlohmann/json for model configuration parsing
 
-## 4. Testing
+## 4. Performance Comparison
+
+The following performance comparisons were conducted on the same machine to ensure fair benchmarking. The tests were performed using both MLP (Multi-Layer Perceptron) and CNN (Convolutional Neural Network) architectures.
+
+### Hardware Configuration
+
+-   CPU: AMD Ryzen 5 2600
+-   GPU: GTX 1060 3GB
+-   RAM: 8GB
+-   CUDA Version: 12.9
+
+### MLP Model Performance
+
+| Framework | Device | Average Inference Time (s) | Speedup vs CPU |
+| --------- | ------ | -------------------------- | -------------- |
+| PyTorch   | CPU    | 9.62                       | 1x (baseline)  |
+| PyTorch   | GPU    | 11.53                      | 1.19x          |
+| InferCUDA | GPU    | 19.97                      | 2.08x          |
+
+### Key Observations
+
+**MLP Performance**
+
+    - InferCUDA shows 2.08x degradation over PyTorch CPU
+    - Compared to PyTorch GPU, InferCUDA is 1.7x slower
+    - The InferCUDA project is very simple and not properly opitimized yet, so the numbers are worse than the state-of-the art machine learning frameworks
+    - The dataset loader might also be the cause for higher inference times as pytroch uses preloaded datasets
+
+### Methodology
+
+-   All tests were performed using the same input data
+-   Average of 1000 inference runs was taken
+-   Batch size of 1 was used for all tests
+-   No data preprocessing time was included in measurements
+
+## 5. Testing
 
 **The project includes several testing aspects:**
 
@@ -166,7 +201,7 @@ Performance Tests:
 -   GPU utilization metrics
 -   Kernel execution time profiling
 
-## 5. Future Improvements
+## 6. Future Improvements
 
 A number of improvements are needed to expand this project capabilities to fully functional CUDA inference C++ library:
 
@@ -193,7 +228,7 @@ A number of improvements are needed to expand this project capabilities to fully
     -   Add benchmarking suite
     -   Create development documentation
 
-## 6. User Manual
+## 7. User Manual
 
 **Basic Usage**
 
@@ -244,7 +279,7 @@ DatasetLoader::allocate_on_device(data, &device_data, size);
 real_t* host_data = DatasetLoader::deallocate_from_device(&device_data, size);
 ```
 
-## 7. How to run
+## 8. How to run
 
 **Prerequisites**
 
@@ -303,6 +338,6 @@ make
 
 Please ensure your code follows the project's coding style and includes appropriate documentation.
 
-## 8. License
+## 9. License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
