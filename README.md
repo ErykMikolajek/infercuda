@@ -13,6 +13,8 @@ InferCUDA is a minimal neural network inference engine written in C++ with CUDA 
 -   Neural net loading from configuration and binary files
 -   Dataset loading and preprocessing capabilities
 -   Support for MNIST dataset format
+-   Configurable network architecture through JSON configuration
+-   Optimized CUDA kernels for parallel processing
 
 ## 2. Problem and Solution
 
@@ -20,10 +22,10 @@ InferCUDA is a minimal neural network inference engine written in C++ with CUDA 
 Neural network inference, especially for complex models, can be computationally intensive when performed on CPUs.
 
 -   This leads to:
--   Slow inference times
--   Limited throughput for batch processing
--   Inefficient resource utilization
--   High latency in real-time applications
+    -   Slow inference times
+    -   Limited throughput for batch processing
+    -   Inefficient resource utilization
+    -   High latency in real-time applications
 
 **Solution**  
 InferCUDA addresses these challenges by:
@@ -33,6 +35,7 @@ InferCUDA addresses these challenges by:
 -   Providing efficient memory management between CPU and GPU
 -   Supporting various neural network architectures
 -   Offering a simple yet powerful API for model loading and inference
+-   Implementing efficient memory access patterns for GPU operations
 
 ## 3. Implementation
 
@@ -46,28 +49,92 @@ The project is organized into several key components:
 -   DatasetLoader: Handles dataset loading and preprocessing
 -   Loader: Manages neural net model loading from files
 
+#### Layer Types:
+
+1. **Linear Layer**
+
+    - Fully connected layer for dense neural networks
+    - Implements matrix multiplication with weights and bias addition
+    - Supports batch processing through CUDA kernels
+
+2. **Conv2D Layer**
+
+    - 2D Convolutional layer for image processing
+    - Supports multiple input and output channels
+    - Implements efficient CUDA kernels with shared memory tiling
+    - Configurable kernel size and padding
+
+3. **Pooling Layer**
+
+    - Max pooling operation for dimensionality reduction
+    - Supports configurable kernel size
+    - Efficient parallel implementation using CUDA
+
+4. **Flatten Layer**
+    - Reshapes multi-dimensional input into 1D vector
+    - Used for transitioning between convolutional and dense layers
+
+#### Activation Functions:
+
+1. **ReLU (Rectified Linear Unit)**
+
+    - Implementation: f(x) = max(0, x)
+    - Efficient parallel computation on GPU
+    - Helps with vanishing gradient problem
+
+2. **Softmax**
+    - Implementation: f(x_i) = exp(x_i - max) / sum(exp(x_j - max))
+    - Includes numerical stability optimization
+    - Used for multi-class classification output
+
 #### CUDA Kernels:
 
--   Fully connected layer operations
--   Convolutional layer operations
--   Pooling operations
--   Activation functions
+1. **Fully Connected Layer Kernels**
+
+    - Optimized matrix multiplication
+    - Support for both single and batch processing
+    - Efficient memory access patterns
+
+2. **Convolutional Layer Kernels**
+
+    - Shared memory tiling for improved performance
+    - Parallel processing of multiple channels
+    - Optimized memory access for input and weight tensors
+
+3. **Pooling Layer Kernels**
+
+    - Parallel reduction for finding maximum values
+    - Efficient handling of overlapping regions
+    - Optimized memory access patterns
+
+4. **Activation Function Kernels**
+    - Parallel element-wise operations
+    - Efficient implementation of ReLU and Softmax
+    - Numerical stability optimizations for Softmax
 
 **File Structure:**
 
 ```
-include/
-└── model_definitions.cuh       ← structures definitions + prototypes
-src/
-├── main.c               ← arg parsing, init, infer → teardown
-├── loader.c             ← load_bin, load_cfg, allocs host/device
-├── infer.c              ← infer_host (calls next layer_infer)
-└── utils.c              ← cpu_gemv, cpu_activation, benchmarks
-kernels/
-├── fc_layer.cu          ← gemv_kernel + bias + activation
-├── conv_layer.cu        ← direct_conv_kernel + activation
-├── pool_layer.cu        ← maxpool_kernel + avgpool_kernel
-└── activations.cu       ← relu_kernel, softmax_kernel
+infercuda/
+├── include/
+│   ├── common.h            # Common definitions and types
+│   ├── layer.h             # Layer class definition
+│   ├── network.h           # Network class definition
+│   ├── loader.h            # Model loading utilities
+│   ├── kernels.h           # CUDA kernel declarations
+│   └── dataset_loader.h    # Dataset handling utilities
+├── src/
+│   ├── layer.cpp           # Layer class implementation
+│   ├── network.cpp         # Network class implementation
+│   ├── loader.cpp          # Model loading implementation
+│   └── dataset_loader.cpp  # Dataset handling implementation
+├── cuda/
+│   ├── activations.cu      # Activation function kernels
+│   ├── conv_kernel.cu      # Convolutional layer kernels
+│   ├── fc_kernel.cu        # Fully connected layer kernels
+│   └── maxpool_kernel.cu   # Pooling layer kernels
+├── sample_models/          # Example model configurations
+├── dataset/                # Dataset storage
 ```
 
 **Environment**
@@ -78,6 +145,7 @@ kernels/
     -   CUDA Toolkit
     -   C++ Standard Library
     -   Standard I/O libraries
+    -   nlohmann/json for model configuration parsing
 
 ## 4. Testing
 
@@ -88,10 +156,15 @@ Integration Tests:
 -   End-to-end inference: manual data flow through the model
 -   Model loading: debug print functions to validate loaded model
 -   Dataset processing
+-   Memory management validation
+-   Layer type compatibility checks
 
 Performance Tests:
 
--   Inference speed
+-   Inference speed measurements
+-   Memory transfer efficiency
+-   GPU utilization metrics
+-   Kernel execution time profiling
 
 ## 5. Future Improvements
 
@@ -105,11 +178,20 @@ A number of improvements are needed to expand this project capabilities to fully
     -   Support for more layer types - the current implementation involve most basic layer types such as Linear and Conv2D
     -   Additional activation functions - functions such as Sigmoid, GELU, Leaky ReLU or others could be implemented to further increase project capabilities
     -   Batch normalization - this mechanism would also be needed to support more advanced models
+    -   Support for recurrent layers (LSTM, GRU)
+    -   Attention mechanisms for transformer architectures
 -   **Usability Enhancements:**
     -   Better error handling - although thorough error handling has been already implemented if this project would be aimed for public usage a more general and elegant error handling system would need to be implemented
     -   Support for more model formats - loader class could be enhanced with the ability to support more model and layer types
+    -   Add comprehensive logging system
+    -   Implement configuration validation
+    -   Add model visualization tools
 -   **Development Tools:**
     -   Performance monitoring - more advanced performance measuring system could be implemented to ease the process of testing
+    -   Add unit testing framework
+    -   Implement continuous integration
+    -   Add benchmarking suite
+    -   Create development documentation
 
 ## 6. User Manual
 
@@ -166,15 +248,39 @@ real_t* host_data = DatasetLoader::deallocate_from_device(&device_data, size);
 
 **Prerequisites**
 
-1. Install CUDA Toolkit
-2. Install C++ compiler with CUDA support
+1. Install CUDA Toolkit (version 11.0 or higher recommended)
+2. Install C++ compiler with CUDA support (GCC 9.0+ or Clang 10.0+)
 3. Set up build environment
+4. Install nlohmann/json library for JSON parsing
 
 #### Running the Example
+
+1. Clone the repository:
+
+```bash
+git clone https://github.com/yourusername/infercuda.git
+cd infercuda
+```
+
+2. Build the project:
+
+```bash
+mkdir build && cd build
+cmake ..
+make
+```
+
+3. Prepare the model and data:
 
 -   Place model configuration in `sample_models`: `sample_models/cnn_model_cfg.json`
 -   Place model weights in `sample_models`: `sample_models/cnn_model.bin`
 -   Place your dataset in `dataset/mnist_test.txt`
+
+4. Run the example:
+
+```bash
+./infercuda_example
+```
 
 **Expected Output**
 
@@ -182,15 +288,21 @@ real_t* host_data = DatasetLoader::deallocate_from_device(&device_data, size);
     - Check GPU compatibility
     - Verify CUDA installation
     - Check memory availability
+    - Ensure proper CUDA driver installation
 2. Build Errors:
     - Verify CUDA toolkit installation
     - Check compiler compatibility
     - Ensure all dependencies are installed
+    - Check CMake configuration
 3. Runtime Errors:
     - Check model file paths
     - Verify dataset format
     - Monitor GPU memory usage
+    - Check input dimensions
+    - Validate model configuration
 
-##
+Please ensure your code follows the project's coding style and includes appropriate documentation.
 
-This documentation provides a comprehensive overview of the InferCUDA project, its implementation, and usage. For more detailed information about specific components or features, refer to the inline documentation in the source code.
+## 8. License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
