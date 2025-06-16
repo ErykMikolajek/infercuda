@@ -1,16 +1,43 @@
+/**
+ * @file fc_kernel.cu
+ * @brief CUDA implementation of fully connected layer forward pass
+ *
+ * This file contains the CUDA kernel implementations for the forward pass
+ * of fully connected layers, supporting both single and batch processing.
+ */
+
 #include "kernels.h"
 #include <stdexcept>
 #include <string>
 
 #define BLOCK_SIZE 256
 
-// TODO: Implement this kernel: batch matrix * weights matrix + bias
+/**
+ * @brief CUDA kernel for fully connected layer forward pass with batch
+ * processing
+ * @param input Input data array
+ * @param weights Weight matrix
+ * @param bias Bias vector
+ * @param output Output data array
+ * @param batch_size Number of samples in the batch
+ * @param input_dim Dimension of input data
+ * @param output_dim Dimension of output data
+ */
 __global__ void fc_forward_kernel_batch_dim_n(const real_t *input,
                                               const real_t *weights,
                                               const real_t *bias,
                                               real_t *output, int batch_size,
                                               int input_dim, int output_dim) {}
 
+/**
+ * @brief CUDA kernel for fully connected layer forward pass with single sample
+ * @param input Input data array
+ * @param weights Weight matrix
+ * @param bias Bias vector
+ * @param output Output data array
+ * @param input_dim Dimension of input data
+ * @param output_dim Dimension of output data
+ */
 __global__ void fc_forward_kernel_batch_dim_1(const real_t *input,
                                               const real_t *weights,
                                               const real_t *bias,
@@ -32,6 +59,22 @@ __global__ void fc_forward_kernel_batch_dim_1(const real_t *input,
     // printf("Forward Output[%d] = %f\n", out_idx, output[out_idx]);
 }
 
+/**
+ * @brief Host function to launch fully connected layer forward pass
+ *
+ * This function handles the CUDA kernel launch for the fully connected layer
+ * forward pass, supporting both single sample and batch processing modes.
+ *
+ * @param input Input data array
+ * @param weights Weight matrix
+ * @param bias Bias vector
+ * @param output Output data array
+ * @param batch_size Number of samples in the batch
+ * @param input_dim Dimension of input data
+ * @param output_dim Dimension of output data
+ * @throws std::runtime_error if any device pointer is null or kernel launch
+ * fails
+ */
 void fc_forward(const real_t *input, const real_t *weights, const real_t *bias,
                 real_t *output, size_t batch_size, size_t input_dim,
                 size_t output_dim) {

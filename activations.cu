@@ -1,7 +1,25 @@
+/**
+ * @file activations.cu
+ * @brief CUDA implementation of neural network activation functions
+ *
+ * This file contains CUDA kernel implementations for various activation
+ * functions including ReLU and Softmax, along with supporting reduction
+ * operations.
+ */
+
 #include "layer.h"
 #include <stdexcept>
 #include <string>
 
+/**
+ * @brief CUDA kernel for ReLU activation function
+ *
+ * Applies the ReLU activation function: f(x) = max(0, x)
+ *
+ * @param x Input array
+ * @param y Output array
+ * @param len Length of the arrays
+ */
 __global__ void relu_kernel(float *x, float *y, int len) {
     int tid = blockIdx.x * blockDim.x + threadIdx.x;
     if (tid < len) {
@@ -10,6 +28,17 @@ __global__ void relu_kernel(float *x, float *y, int len) {
     // printf("ReLU: y[%d] = %f\n", tid, y[tid]);
 };
 
+/**
+ * @brief CUDA kernel to find maximum value in array
+ *
+ * Uses parallel reduction to find the maximum value in an array.
+ * Each block computes a local maximum, and the results are stored
+ * in the max_val array for further processing.
+ *
+ * @param x Input array
+ * @param max_val Array to store block-wise maximum values
+ * @param len Length of the input array
+ */
 __global__ void find_max(const float *x, float *max_val, int len) {
     extern __shared__ float sdata[];
 
@@ -31,7 +60,17 @@ __global__ void find_max(const float *x, float *max_val, int len) {
     }
 }
 
-// Compute sum of exp(x_i - max) using reduction
+/**
+ * @brief CUDA kernel to compute sum of exponentials
+ *
+ * Computes the sum of exp(x_i - max_val) using parallel reduction.
+ * This is a key step in the softmax computation.
+ *
+ * @param x Input array
+ * @param max_val Maximum value (for numerical stability)
+ * @param sum Array to store block-wise sums
+ * @param len Length of the input array
+ */
 __global__ void compute_sum(const float *x, float max_val, float *sum,
                             int len) {
     extern __shared__ float sdata[];
@@ -54,6 +93,18 @@ __global__ void compute_sum(const float *x, float max_val, float *sum,
     }
 }
 
+/**
+ * @brief CUDA kernel for softmax activation function
+ *
+ * Applies the softmax activation function: f(x_i) = exp(x_i - max) /
+ * sum(exp(x_j - max))
+ *
+ * @param x Input array
+ * @param y Output array
+ * @param max_val Maximum value (for numerical stability)
+ * @param sum Sum of exponentials
+ * @param len Length of the arrays
+ */
 __global__ void softmax_kernel(const float *x, float *y, float max_val,
                                float sum, int len) {
     int tid = blockIdx.x * blockDim.x + threadIdx.x;
@@ -62,6 +113,25 @@ __global__ void softmax_kernel(const float *x, float *y, float max_val,
     }
 }
 
+/**
+ * @brief Host function to apply activation functions
+ *
+ * This function handles the CUDA kernel launch for various activation
+ * functions. Currently supports:
+ * - ReLU (act = 1)
+ * - Softmax (act = 0)
+ *
+ * For softmax, it performs a three-step process:
+ * 1. Find the maximum value for numerical stability
+ * 2. Compute the sum of exponentials
+ * 3. Apply the final softmax transformation
+ *
+ * @param d Input array on device
+ * @param y Output array on device
+ * @param len Length of the arrays
+ * @param act Activation function type (0: Softmax, 1: ReLU)
+ * @throws std::runtime_error if activation function type is invalid
+ */
 void apply_activation(float *d, float *y, int len, int act) {
     size_t grid_size = (len + BLOCK_SIZE - 1) / BLOCK_SIZE;
     switch (act) {

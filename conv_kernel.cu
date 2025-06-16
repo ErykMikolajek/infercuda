@@ -1,8 +1,39 @@
+/**
+ * @file conv_kernel.cu
+ * @brief CUDA implementation of 2D convolutional layer forward pass
+ *
+ * This file contains the CUDA kernel implementation for the forward pass
+ * of 2D convolutional layers, using shared memory for efficient computation.
+ */
+
 #include "kernels.h"
 
 #define BLOCK_SIZE 256
 #define TILE_SIZE 16
 
+/**
+ * @brief CUDA kernel for 2D convolution forward pass with single sample
+ *
+ * This kernel implements the forward pass of a 2D convolutional layer using
+ * shared memory tiling for improved performance. It supports:
+ * - Multiple input and output channels
+ * - Configurable kernel size
+ * - Zero padding
+ * - Optional bias
+ *
+ * @param input Input feature map [C_in, H_in, W_in]
+ * @param weights Weight tensor [C_out, C_in, kernel_size, kernel_size]
+ * @param bias Bias tensor [C_out] (can be nullptr if no bias)
+ * @param output Output feature map [C_out, H_out, W_out]
+ * @param C_in Number of input channels
+ * @param C_out Number of output channels
+ * @param H_in Input height
+ * @param W_in Input width
+ * @param H_out Output height
+ * @param W_out Output width
+ * @param kernel_size Size of the convolution kernel (assumed square)
+ * @param padding Padding size
+ */
 __global__ void conv_forward_kernel_batch_dim_1(
     const real_t *input, // Input feature map [C_in, H_in, W_in]
     const real_t
@@ -99,6 +130,19 @@ __global__ void conv_forward_kernel_batch_dim_1(
     }
 }
 
+/**
+ * @brief Calculate output dimensions for 2D convolution
+ *
+ * Computes the output dimensions of a 2D convolution operation given
+ * input dimensions, kernel size, and padding.
+ *
+ * @param H_in Input height
+ * @param W_in Input width
+ * @param kernel_size Size of the convolution kernel
+ * @param padding Padding size
+ * @param H_out [out] Output height
+ * @param W_out [out] Output width
+ */
 void calculate_output_dimensions(size_t H_in, size_t W_in, size_t kernel_size,
                                  size_t padding, size_t &H_out, size_t &W_out) {
     // for stride = 1:
@@ -106,6 +150,25 @@ void calculate_output_dimensions(size_t H_in, size_t W_in, size_t kernel_size,
     W_out = W_in + 2 * padding - kernel_size + 1;
 }
 
+/**
+ * @brief Host function to launch 2D convolution forward pass
+ *
+ * This function handles the CUDA kernel launch for the 2D convolutional layer
+ * forward pass. Currently only supports single sample processing.
+ *
+ * @param input Input feature map
+ * @param weights Convolution weights
+ * @param bias Bias vector (can be nullptr)
+ * @param output Output feature map
+ * @param batch_size Number of samples in the batch (must be 1)
+ * @param input_channels Number of input channels
+ * @param output_channels Number of output channels
+ * @param kernel_h Height of the convolution kernel
+ * @param kernel_w Width of the convolution kernel
+ * @param H_in Input height
+ * @param W_in Input width
+ * @throws std::runtime_error if batch_size > 1 or kernel launch fails
+ */
 void conv2d_forward(const real_t *input, const real_t *weights,
                     const real_t *bias, real_t *output, size_t batch_size,
                     size_t input_channels, size_t output_channels,
@@ -120,12 +183,11 @@ void conv2d_forward(const real_t *input, const real_t *weights,
     dim3 gridDim((W_out + TILE_SIZE - 1) / TILE_SIZE,
                  (H_out + TILE_SIZE - 1) / TILE_SIZE);
 
-    
     int SHARED_SIZE = TILE_SIZE + kernel_h - 1;
     size_t shared_mem_size = SHARED_SIZE * SHARED_SIZE * sizeof(real_t);
 
     printf("\n------ Conv2D Forward ------\n");
-    
+
     if (batch_size == 1) {
         conv_forward_kernel_batch_dim_1<<<gridDim, blockDim, shared_mem_size>>>(
             input, weights, bias, output, input_channels, output_channels, H_in,
