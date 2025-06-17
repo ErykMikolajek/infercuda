@@ -76,6 +76,7 @@ def main():
                     "kernel_size": [layer.kernel_size[0], layer.kernel_size[1]],
                     "activation": "none"
                 })
+                print(f"warstwa: {name}, {layer.in_channels}x{layer.out_channels}x{layer.kernel_size[0]}x{layer.kernel_size[1]}")
                 # zapis wag
                 f.write(w.flatten().tobytes())
                 f.write(b.flatten().tobytes())
